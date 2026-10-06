@@ -7,7 +7,7 @@ A local, synthetic-data demo of an internal fulfillment tool. It turns an at-ris
 - **Operations workflow:** one delayed high-value order, from exception to auditable approval.
 - **Gemini structured output:** with `GEMINI_API_KEY`, Gemini returns a typed `RecoveryPlan`; no key is required for the deterministic local fallback.
 - **AI safety:** the model does not decide what is safe. Server-side Python checks available-to-promise inventory, carrier eligibility, and a $25 approval limit.
-- **A clear failure mode:** Reno looks attractive geographically, but all stock is reserved. The policy layer rejects this plausible suggestion and the tool selects Ontario instead.
+- **A clear safety boundary:** Gemini proposes a plan, and deterministic server-side checks verify inventory, carrier eligibility, and cost before approval. The tests cover rejection of a plan that names a warehouse with no available stock.
 
 ## Run locally
 
@@ -31,7 +31,7 @@ pytest
 
 1. Show the at-risk order and click **Generate recovery plan**.
 2. Explain that Gemini proposes a typed plan using pre-queried inventory and carrier facts; Python policy code validates it.
-3. Open “View rejected AI candidate” to show that reserved Reno inventory was caught by the available-to-promise check.
-4. Approve the Ontario/UPS plan and point to the audit record. The headline value metric is the controlled demo comparison: 8 minutes of manual triage versus a 90-second assisted workflow.
+3. Show the inventory, carrier cutoff, and cost checks, then approve the recommendation and point to the audit record.
+4. If discussing a hard moment, describe the reserved-inventory case as a test scenario for the policy validator, not as a mistake observed from Gemini. The 8-minute versus 90-second comparison is a synthetic demo estimate, not a measured user result.
 
 All people, orders, inventory, and metrics are synthetic for demonstration only.

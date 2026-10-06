@@ -44,8 +44,6 @@ async function generatePlan() {
     $('#ai-status').textContent = result.ai_status;
     $('#decision-context').textContent = result.decision_context;
     $('#checks').innerHTML = result.validation.checks.map((check) => `<div class="check"><span class="check-icon">${check.passed ? '✓' : '!'}</span><div><b>${check.name}</b><span>${check.detail}</span></div></div>`).join('');
-    $('#rejection').textContent = result.rejected_validation.rejection_reason;
-    $('#rejected-plan').textContent = JSON.stringify(result.rejected_candidate, null, 2);
     $('#recovery-options').innerHTML = result.recovery_options.map((option) => `<article class="option ${option.status}"><div class="option-top"><b>${option.title}</b><span>${option.status}</span></div><p>${option.detail}</p><strong>${money(option.incremental_cost)}</strong></article>`).join('');
     $('#result').classList.remove('hidden');
     $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' });

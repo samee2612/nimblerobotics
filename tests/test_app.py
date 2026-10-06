@@ -1,12 +1,13 @@
 from fastapi.testclient import TestClient
 
-from app import FALLBACK_PLAN, REJECTED_CANDIDATE, app, validate_plan
+from app import FALLBACK_PLAN, app, validate_plan
 
 client = TestClient(app)
 
 
-def test_reserved_inventory_candidate_is_rejected():
-    result = validate_plan(REJECTED_CANDIDATE)
+def test_validator_rejects_a_plan_using_reserved_inventory():
+    invalid_plan = FALLBACK_PLAN.model_copy(update={"source_warehouse": "Reno, NV"})
+    result = validate_plan(invalid_plan)
     assert result.valid is False
     assert "Available-to-promise" in result.rejection_reason
 

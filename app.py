@@ -77,8 +77,6 @@ class PlanResponse(BaseModel):
     plan: RecoveryPlan
     source: Literal["gemini", "local fallback"]
     validation: ValidationResult
-    rejected_candidate: RecoveryPlan
-    rejected_validation: ValidationResult
     tools_used: list[str]
     recovery_options: list[RecoveryOption]
     decision_context: str
@@ -153,16 +151,6 @@ CARRIERS = [
     ),
 ]
 
-REJECTED_CANDIDATE = RecoveryPlan(
-    action="reroute_inventory",
-    source_warehouse="Reno, NV",
-    carrier_service="UPS Next Day Air",
-    incremental_cost=18.50,
-    customer_impact="Arrives tomorrow by 8 PM.",
-    rationale="Reno is geographically closest and offers next-day delivery.",
-    confidence="medium",
-)
-
 FALLBACK_PLAN = RecoveryPlan(
     action="reroute_inventory",
     source_warehouse="Ontario, CA",
@@ -202,14 +190,13 @@ class Scenario(BaseModel):
     inventory: list[InventoryPosition]
     carriers: list[CarrierOption]
     fallback_plan: RecoveryPlan
-    rejected_candidate: RecoveryPlan
     recovery_options: list[RecoveryOption]
 
 
 SCENARIOS = {
     ORDER.id: Scenario(
         inventory=INVENTORY, carriers=CARRIERS, fallback_plan=FALLBACK_PLAN,
-        rejected_candidate=REJECTED_CANDIDATE, recovery_options=RECOVERY_OPTIONS,
+        recovery_options=RECOVERY_OPTIONS,
     ),
     "NB-48307": Scenario(
         inventory=[
@@ -222,7 +209,6 @@ SCENARIOS = {
             CarrierOption(service="UPS 2nd Day Air", delivery_days=2, incremental_cost=10.00, cutoff_status="Eligible · unnecessary for promise", eligible=True),
         ],
         fallback_plan=RecoveryPlan(action="reroute_inventory", source_warehouse="Phoenix, AZ", carrier_service="Ground", incremental_cost=0.00, customer_impact="Arrives Friday by 8 PM; no customer outreach required.", rationale="Phoenix has 11 available units and standard Ground service still meets Friday's promise at no incremental cost.", confidence="high"),
-        rejected_candidate=RecoveryPlan(action="reroute_inventory", source_warehouse="Reno, NV", carrier_service="Ground", incremental_cost=0.00, customer_impact="Arrives Friday by 8 PM.", rationale="Reno appeared nearby, but its stock is reserved.", confidence="medium"),
         recovery_options=[
             RecoveryOption(title="Phoenix, AZ → Ground", detail="Meets Friday promise with 11 units available and no extra cost.", incremental_cost=0.00, status="recommended"),
             RecoveryOption(title="Phoenix, AZ → UPS 2nd Day Air", detail="Also works, but adds $10 with no service benefit.", incremental_cost=10.00, status="viable"),
@@ -241,7 +227,6 @@ SCENARIOS = {
             CarrierOption(service="Ground", delivery_days=2, incremental_cost=0.00, cutoff_status="Misses noon promise", eligible=False),
         ],
         fallback_plan=RecoveryPlan(action="reroute_inventory", source_warehouse="Ontario, CA", carrier_service="FedEx Priority Overnight", incremental_cost=24.00, customer_impact="Arrives tomorrow by noon; promise preserved.", rationale="Only Ontario has available inventory close enough, and FedEx Priority Overnight is the sole carrier still inside its cutoff.", confidence="high"),
-        rejected_candidate=RecoveryPlan(action="reroute_inventory", source_warehouse="Ontario, CA", carrier_service="UPS Next Day Air", incremental_cost=18.50, customer_impact="Arrives tomorrow by noon.", rationale="UPS is cheaper, but its cutoff has already passed.", confidence="medium"),
         recovery_options=[
             RecoveryOption(title="Ontario, CA → FedEx Priority Overnight", detail="Only eligible carrier that preserves the noon promise.", incremental_cost=24.00, status="recommended"),
             RecoveryOption(title="Ontario, CA → UPS Next Day Air", detail="Cheaper, but the carrier cutoff has already passed.", incremental_cost=18.50, status="rejected"),
@@ -282,7 +267,7 @@ Carrier tool result: {eligible_carriers}
 Choose only facts from these results. Prefer the lowest cost option that preserves the promise. Return JSON only."""
     client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"), contents=prompt,
+        model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"), contents=prompt,
         config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=RecoveryPlan, temperature=0.2),
     )
     return RecoveryPlan.model_validate_json(response.text)
@@ -348,7 +333,7 @@ Eligible carrier tool result: {eligible_carriers}
 
 Rules: use only an eligible warehouse and carrier shown above. Prefer the lowest incremental cost that still preserves the promised delivery date. Do not invent facts. Return the requested JSON only."""
     response = client.models.generate_content(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
+        model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -378,7 +363,6 @@ def get_exception(order_id: str = "NB-48291"):
 def generate_plan(order_id: str = "NB-48291"):
     order = get_order(order_id)
     scenario = get_scenario(order_id)
-    rejected_validation = validate_plan_for(scenario.rejected_candidate, order, scenario)
     source: Literal["gemini", "local fallback"] = "local fallback"
     ai_status = "Gemini is not configured; local decision rules selected the recommendation."
     try:
@@ -400,8 +384,6 @@ def generate_plan(order_id: str = "NB-48291"):
         plan=plan,
         source=source,
         validation=validation,
-        rejected_candidate=scenario.rejected_candidate,
-        rejected_validation=rejected_validation,
         tools_used=["inventory availability lookup", "carrier cutoff lookup", "cost policy validation"],
         recovery_options=scenario.recovery_options,
         decision_context=f"{order.id}: {len(scenario.inventory)} warehouse positions and {len(scenario.carriers)} carrier options were evaluated.",
