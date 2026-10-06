@@ -27,6 +27,14 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
 pytest
 ```
 
+## Deploy on Render
+
+1. In Render, create a new Blueprint and connect this GitHub repository.
+2. Render reads `render.yaml` and prompts for `GEMINI_API_KEY`. Enter a newly generated key as a secret in Render; do not commit it or put it in the Blueprint file.
+3. Deploy the Blueprint and open the generated `onrender.com` URL.
+
+The free instance may take a short time to wake after inactivity. This app uses synthetic data only and has no authentication; do not connect it to real customer or operational data.
+
 ## Recording flow
 
 1. Show the at-risk order and click **Generate recovery plan**.
