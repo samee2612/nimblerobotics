@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fulfillment Exception Copilot</title>
+    <link rel="stylesheet" href="/static/styles.css?v=3" />
+    <link rel="stylesheet" href="/static/simplify.css?v=3" />
+  </head>
+  <body>
+    <main class="shell">
+      <nav><a class="brand" href="/">Nimble<span>Ops</span></a><div class="nav-right"><span class="online-dot"></span>Demo environment <span class="avatar">SC</span></div></nav>
+      <section class="hero"><div><p class="eyebrow">EXCEPTION CENTER</p><h1>Fulfillment Exception Copilot</h1><p class="subhead">A simple way to recover a delayed order before the carrier cutoff.</p></div><div class="time-card"><span>Typical workflow</span><strong>3 steps</strong><small>Generate · Review · Approve</small></div></section>
+      <div class="steps"><span class="active"><b>1</b> Generate</span><i></i><span><b>2</b> Review</span><i></i><span><b>3</b> Approve</span></div>
+      <section class="grid top-grid">
+        <article class="card order-card"><div class="card-header"><div><p class="label">AT-RISK ORDER</p><h2 id="order-id">Loading…</h2></div><span class="risk">HIGH RISK</span></div><div class="order-summary" id="order-summary"></div><div class="alert"><b>Why it needs action</b><span id="risk-reason"></span></div></article>
+        <article class="card action-card"><p class="label">EXCEPTION QUEUE · <span id="queue-count">3</span> ORDERS</p><label class="queue-label" for="order-select">Choose an order to investigate</label><select id="order-select"></select><h2>Find a recovery plan</h2><p>Click once. The copilot checks the available options and recommends the safest one.</p><button id="plan-button" class="primary">Generate recovery plan <span>→</span></button><p class="micro">Demo data only · nothing is sent to a customer.</p></article>
+      </section>
+      <section id="loading" class="loading hidden"><i></i><div><b>Checking inventory, carrier cutoffs, and cost policy…</b><span>AI proposes; deterministic rules validate.</span></div></section>
+      <section id="result" class="result hidden">
+        <div class="section-heading"><div><p class="eyebrow">RECOVERY PLAN</p><h2>A safe option is ready for review</h2><p id="ai-status" class="ai-status"></p></div><span id="source-badge" class="source-badge"></span></div>
+        <div class="decision-flow"><div><span>1</span><b>Selected order facts</b><p id="decision-context"></p></div><i>→</i><div><span>2</span><b>Gemini proposes</b><p>Chooses from the available warehouse and carrier facts.</p></div><i>→</i><div><span>3</span><b>Code verifies</b><p>Rejects unavailable inventory, missed cutoffs, or excess cost.</p></div></div>
+        <div class="grid plan-grid"><article class="card plan-card"><div class="recommended"><span>RECOMMENDED</span><span id="confidence" class="confidence"></span></div><h2 id="plan-title"></h2><p id="customer-impact" class="impact"></p><div class="metrics"><div><span>INCREMENTAL COST</span><b id="plan-cost"></b></div><div><span>PROMISE</span><b>Preserved</b></div></div><div class="rationale"><b>Why this plan</b><p id="rationale"></p></div><button id="approve-button" class="primary approve">Approve recovery plan <span>✓</span></button></article>
+        <article class="card checks-card"><p class="label">STEP 2 · REVIEW</p><h2>Does it pass the checks?</h2><div id="checks"></div><div class="tools"><b>What the app checks</b><p>Available inventory · delivery cutoff · approval cost limit</p></div></article></div>
+        <article class="hard-moment"><div class="hard-icon">!</div><div><p class="label">AI ERROR CAUGHT</p><h3>The first idea used reserved inventory.</h3><p id="rejection"></p><details><summary>Show what was rejected</summary><pre id="rejected-plan"></pre></details></div></article>
+        <section class="options-section"><p class="eyebrow">RECOVERY OPTIONS CONSIDERED</p><h2>Why this is the best choice</h2><div id="recovery-options" class="options-grid"></div></section>
+      </section>
+      <section id="audit" class="audit hidden"><span class="audit-icon">✓</span><div><p class="label">APPROVED AND LOGGED</p><h3 id="audit-title"></h3><p id="audit-detail"></p></div><button id="reset-button" class="secondary">Run another demo</button></section>
+    </main>
+    <script src="/static/app.js?v=3"></script>
+  </body>
+</html>
